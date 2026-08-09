@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CODEX × WORKBUDDY · Token 实时监控</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --line:#e6e8eb; --line2:#f0f1f3;
+    --tx:#1a1d21; --tx2:#5c6570; --tx3:#8b94a0;
+    --codex:#10a37f; --codex-bg:#e7f6f1;
+    --wb:#3b6df5; --wb-bg:#e8eefe;
+    --ok:#12a150; --warn:#e08600; --bad:#dc2626;
+    --shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--tx);
+    font:14px/1.5 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    padding:20px 24px 48px;
+  }
+  .wrap{max-width:1400px;margin:0 auto}
+
+  header{display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+  h1{font-size:19px;font-weight:650;letter-spacing:-.2px}
+  h1 .sep{color:var(--tx3);font-weight:400;margin:0 6px}
+  .pulse{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);
+    background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 11px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);
+    box-shadow:0 0 0 0 rgba(18,161,80,.55);animation:pp 2s infinite}
+  .dot.off{background:var(--bad);animation:none}
+  @keyframes pp{0%{box-shadow:0 0 0 0 rgba(18,161,80,.5)}70%{box-shadow:0 0 0 7px rgba(18,161,80,0)}100%{box-shadow:0 0 0 0 rgba(18,161,80,0)}}
+  .spacer{flex:1}
+  .meta{font-size:12px;color:var(--tx3)}
+  .btn{font:13px/1 inherit;font-weight:600;color:var(--tx2);background:var(--card);
+    border:1px solid var(--line);border-radius:8px;padding:7px 13px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px;transition:.15s}
+  .btn:hover{border-color:#cfd4da;color:var(--tx)}
+  .btn:active{transform:translateY(1px)}
+  .btn.spin svg{animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .btn svg{width:14px;height:14px}
+
+  .grid{display:grid;gap:14px;margin-bottom:14px}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .g2{grid-template-columns:1fr 1fr}
+  .g32{grid-template-columns:1.35fr 1fr}
+  @media(max-width:1080px){.g4{grid-template-columns:repeat(2,1fr)}.g2,.g32{grid-template-columns:1fr}}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:16px 18px;box-shadow:var(--shadow)}
+  .card h3{font-size:12px;font-weight:600;color:var(--tx2);letter-spacing:.3px;
+    text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .card h3 .tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;
+    text-transform:none;letter-spacing:0}
+  .tag.c{background:var(--codex-bg);color:var(--codex)}
+  .tag.w{background:var(--wb-bg);color:var(--wb)}
+
+  .kpi{font-size:30px;font-weight:680;letter-spacing:-1px;line-height:1.1;
+    font-variant-numeric:tabular-nums}
+  .kpi small{font-size:14px;font-weight:500;color:var(--tx3);margin-left:3px;letter-spacing:0}
+  .sub{font-size:12px;color:var(--tx2);margin-top:8px;display:flex;gap:12px;flex-wrap:wrap}
+  .sub b{font-weight:600;color:var(--tx);font-variant-numeric:tabular-nums}
+  .delta{font-size:11px;padding:2px 6px;border-radius:5px;background:#f1f3f5;color:var(--tx2)}
+
+  /* 额度 */
+  .quota-bar{height:9px;border-radius:5px;background:#eef0f2;overflow:hidden;margin:10px 0 7px}
+  .quota-fill{height:100%;border-radius:5px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+  .qrow{display:flex;justify-content:space-between;font-size:11.5px;color:var(--tx2)}
+
+  /* 双端对比条 */
+  .split{display:flex;height:11px;border-radius:6px;overflow:hidden;margin:12px 0 10px;background:#eef0f2}
+  .split i{display:block;transition:width .6s}
+  .legend{display:flex;gap:16px;font-size:12px;color:var(--tx2);flex-wrap:wrap}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .sw{width:9px;height:9px;border-radius:3px;display:inline-block}
+
+  /* 拆分明细 */
+  .breakdown{margin-top:14px;border-top:1px solid var(--line2);padding-top:12px;
+    display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .bd{text-align:center}
+  .bd em{display:block;font-size:11px;color:var(--tx3);font-style:normal;margin-bottom:3px}
+  .bd b{font-size:15px;font-weight:640;font-variant-numeric:tabular-nums}
+
+  canvas{width:100%;display:block}
+
+  /* 表格 */
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;font-size:11px;font-weight:600;color:var(--tx3);
+    text-transform:uppercase;letter-spacing:.3px;padding:0 8px 8px;
+    border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:8px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#fafbfc}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .mono{font-family:ui-monospace,"SF Mono",Consolas,monospace;font-size:11.5px;color:var(--tx2)}
+  .badge{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:5px}
+  .badge.c{background:var(--codex-bg);color:var(--codex)}
+  .badge.w{background:var(--wb-bg);color:var(--wb)}
+  .trunc{max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* 上下文水位 */
+  .ctx{display:flex;align-items:center;gap:7px;min-width:96px}
+  .ctx .track{flex:1;height:5px;border-radius:3px;background:#eef0f2;overflow:hidden}
+  .ctx .fill{height:100%;border-radius:3px}
+  .ctx span{font-size:10.5px;color:var(--tx3);font-variant-numeric:tabular-nums;min-width:28px}
+
+  /* 模型条 */
+  .mrow{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .mrow .nm{width:150px;font-size:12px;display:flex;align-items:center;gap:7px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mrow .track{flex:1;height:16px;background:#f2f4f6;border-radius:4px;overflow:hidden}
+  .mrow .fill{height:100%;border-radius:4px;transition:width .6s}
+  .mrow .val{width:104px;text-align:right;font-size:11.5px;color:var(--tx2);
+    font-variant-numeric:tabular-nums}
+
+  .flow{max-height:340px;overflow-y:auto;margin:-4px -6px 0}
+  .flow::-webkit-scrollbar{width:6px}
+  .flow::-webkit-scrollbar-thumb{background:#d8dce0;border-radius:3px}
+  @keyframes flash{from{background:#fff8e1}to{background:transparent}}
+  .new{animation:flash 2.2s ease-out}
+
+  .empty{color:var(--tx3);font-size:12.5px;padding:20px 0;text-align:center}
+  .foot{margin-top:20px;font-size:11.5px;color:var(--tx3);text-align:center;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>CODEX <span class="sep">×</span> WORKBUDDY <span class="sep">·</span> Token 实时监控</h1>
+    <div class="pulse"><i class="dot" id="dot"></i><span id="conn">连接中…</span></div>
+    <div class="spacer"></div>
+    <div class="meta" id="meta">—</div>
+    <button class="btn" id="btn-start" title="开始 / 恢复监控" style="display:none">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      <span id="btn-start-txt">开始</span>
+    </button>
+    <button class="btn" id="btn-stop" title="暂停监控（数据停止刷新，可随时开始恢复）">
+      <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>
+      <span id="btn-stop-txt">停止</span>
+    </button>
+  </header>
+
+  <!-- 核心 KPI -->
+  <div class="grid g4">
+    <div class="card">
+      <h3>今日总消耗</h3>
+      <div class="kpi" id="k-today">—<small>tokens</small></div>
+      <div class="sub">
+        <span><i class="sw" style="background:var(--codex)"></i> Codex <b id="k-today-c">—</b></span>
+        <span><i class="sw" style="background:var(--wb)"></i> WB <b id="k-today-w">—</b></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>今日成本估算</h3>
+      <div class="kpi" id="k-cost">—</div>
+      <div class="sub">
+        <span>Codex <b id="k-cost-c">—</b></span>
+        <span>WB <b id="k-cost-w">—</b></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>实时消耗速率</h3>
+      <div class="kpi" id="k-rate">—<small>tok/min</small></div>
+      <div class="sub">
+        <span>近 5 分钟 <b id="k-5m">—</b></span>
+        <span>近 1 小时 <b id="k-1h">—</b></span>
+      </div>
+    </div>
+
+    <div class="card" id="quota-card">
+      <h3>Codex 官方额度 <span class="tag c" id="q-plan">—</span></h3>
+      <div class="kpi" id="q-pct">—<small>%</small></div>
+      <div class="quota-bar"><div class="quota-fill" id="q-fill" style="width:0"></div></div>
+      <div class="qrow"><span id="q-window">—</span><span id="q-reset">—</span></div>
+    </div>
+  </div>
+
+  <!-- 双端对比 -->
+  <div class="grid g2">
+    <div class="card">
+      <h3><span class="tag c">CODEX</span> 累计消耗</h3>
+      <div class="kpi" id="c-total">—<small>tokens</small></div>
+      <div class="sub"><span>调用 <b id="c-calls">—</b> 次</span><span>成本 <b id="c-cost">—</b></span>
+        <span>缓存命中率 <b id="c-hit">—</b></span></div>
+      <div class="breakdown">
+        <div class="bd"><em>新增输入</em><b id="c-in">—</b></div>
+        <div class="bd"><em>缓存读取</em><b id="c-cr">—</b></div>
+        <div class="bd"><em>输出</em><b id="c-out">—</b></div>
+        <div class="bd"><em>推理</em><b id="c-rs">—</b></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="tag w">WORKBUDDY</span> 累计消耗</h3>
+      <div class="kpi" id="w-total">—<small>tokens</small></div>
+      <div class="sub"><span>调用 <b id="w-calls">—</b> 次</span><span>成本 <b id="w-cost">—</b></span>
+        <span>缓存命中率 <b id="w-hit">—</b></span></div>
+      <div class="breakdown">
+        <div class="bd"><em>新增输入</em><b id="w-in">—</b></div>
+        <div class="bd"><em>缓存读取</em><b id="w-cr">—</b></div>
+        <div class="bd"><em>输出</em><b id="w-out">—</b></div>
+        <div class="bd"><em>推理</em><b id="w-rs">—</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 趋势 -->
+  <div class="grid g32">
+    <div class="card">
+      <h3>近 14 天消耗趋势</h3>
+      <canvas id="chart-day" height="200"></canvas>
+      <div class="legend" style="margin-top:12px">
+        <span><i class="sw" style="background:var(--codex)"></i>Codex</span>
+        <span><i class="sw" style="background:var(--wb)"></i>WorkBuddy</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>近 24 小时脉搏</h3>
+      <canvas id="chart-hour" height="200"></canvas>
+      <div class="legend" style="margin-top:12px">
+        <span><i class="sw" style="background:var(--codex)"></i>Codex</span>
+        <span><i class="sw" style="background:var(--wb)"></i>WorkBuddy</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模型 + 会话 -->
+  <div class="grid g2">
+    <div class="card">
+      <h3>模型消耗分布</h3>
+      <div id="models"><div class="empty">暂无数据</div></div>
+    </div>
+    <div class="card">
+      <h3>活跃会话 <span class="tag" style="background:#f1f3f5;color:var(--tx2)">Top 12</span></h3>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>端</th><th>会话</th><th>模型</th>
+            <th class="num">Tokens</th><th class="num">命中率</th><th>上下文</th><th>最近</th></tr></thead>
+          <tbody id="sessions"><tr><td colspan="7" class="empty">暂无数据</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 实时流水 -->
+  <div class="card">
+    <h3>实时调用流水 <span class="tag" style="background:#f1f3f5;color:var(--tx2)">最近 60 次</span></h3>
+    <div class="flow">
+      <table>
+        <thead><tr><th>时间</th><th>端</th><th>模型</th><th class="trunc">项目</th>
+          <th class="num">新增输入</th><th class="num">缓存</th><th class="num">输出</th>
+          <th class="num">合计</th><th class="num">成本</th></tr></thead>
+        <tbody id="flow"><tr><td colspan="9" class="empty">等待调用…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="foot">
+    数据源：<code>~/.codex/sessions</code> + <code>~/.codex/archived_sessions</code> ·
+    <code>~/.workbuddy/projects</code> + <code>workbuddy.db</code>　|　全部只读，不修改任何原始日志<br>
+    成本按 <code>pricing.json</code> 本地估算，改价后自动生效；Codex 为订阅制，成本仅作等价参考，请以官方额度条为准
+  </div>
+</div>
+
+<script>
+const CODEX='#10a37f', WB='#3b6df5';
+let prevTopTs = 0;
+
+const fmt = n => {
+  n = Number(n)||0;
+  if (n >= 1e9) return (n/1e9).toFixed(2)+'B';
+  if (n >= 1e6) return (n/1e6).toFixed(2)+'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+  return String(Math.round(n));
+};
+const money = (n,cur) => (cur==='CNY'?'¥':'$') + (Number(n)||0).toFixed(2);
+const pad = n => String(n).padStart(2,'0');
+const hhmmss = ts => { const d=new Date(ts); return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); };
+const setText = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+const setKpi = (id,v,unit) => {
+  const e=document.getElementById(id); if(!e) return;
+  e.innerHTML = v + (unit?`<small>${unit}</small>`:'');
+};
+
+function hitRate(b){
+  const denom = (b.fresh_in||0)+(b.cache_read||0);
+  return denom ? ((b.cache_read||0)/denom*100).toFixed(1)+'%' : '—';
+}
+
+function render(d){
+  const cur = d.currency || 'CNY';
+  const tc = d.today_usage.codex, tw = d.today_usage.workbuddy;
+
+  // KPI
+  setKpi('k-today', fmt(tc.total+tw.total), 'tokens');
+  setText('k-today-c', fmt(tc.total));
+  setText('k-today-w', fmt(tw.total));
+  setKpi('k-cost', money(tc.cost+tw.cost, cur), '');
+  setText('k-cost-c', money(tc.cost,cur));
+  setText('k-cost-w', money(tw.cost,cur));
+
+  const h1 = d.live.h1, m5 = d.live.m5;
+  setKpi('k-rate', fmt(m5.total/5), 'tok/min');
+  setText('k-5m', fmt(m5.total)+' · '+m5.calls+'次');
+  setText('k-1h', fmt(h1.total)+' · '+h1.calls+'次');
+
+  // Codex 额度
+  const q = d.codex_quota;
+  const card = document.getElementById('quota-card');
+  if (q && q.windows && q.windows.length){
+    const w = q.windows[0];
+    const pct = Number(w.used_percent)||0;
+    setText('q-plan', (q.plan||'—').toUpperCase());
+    setKpi('q-pct', pct.toFixed(1), '%');
+    const color = pct>=85 ? 'var(--bad)' : pct>=60 ? 'var(--warn)' : 'var(--ok)';
+    const fill = document.getElementById('q-fill');
+    fill.style.width = Math.min(100,pct)+'%';
+    fill.style.background = color;
+    document.getElementById('q-pct').style.color = color;
+    const mins = w.window_minutes||0;
+    setText('q-window', mins>=1440 ? `${Math.round(mins/1440)} 天窗口` : `${Math.round(mins/60)} 小时窗口`);
+    if (w.resets_at){
+      const left = w.resets_at*1000 - Date.now();
+      if (left > 0){
+        const dd=Math.floor(left/86400000), hh=Math.floor(left%86400000/3600000), mm=Math.floor(left%3600000/60000);
+        setText('q-reset', '重置倒计时 ' + (dd?dd+'天':'') + hh+'时'+mm+'分');
+      } else setText('q-reset','即将重置');
+    } else setText('q-reset','—');
+    card.style.display='';
+  } else {
+    setKpi('q-pct','—',''); setText('q-window','未读取到额度信息'); setText('q-reset','—');
+  }
+
+  // 双端
+  const oc = d.overall.codex, ow = d.overall.workbuddy;
+  setKpi('c-total', fmt(oc.total), 'tokens');
+  setText('c-calls', oc.calls.toLocaleString());
+  setText('c-cost', money(oc.cost,cur));
+  setText('c-hit', hitRate(oc));
+  setText('c-in', fmt(oc.fresh_in)); setText('c-cr', fmt(oc.cache_read));
+  setText('c-out', fmt(oc.out)); setText('c-rs', fmt(oc.reasoning));
+
+  setKpi('w-total', fmt(ow.total), 'tokens');
+  setText('w-calls', ow.calls.toLocaleString());
+  setText('w-cost', money(ow.cost,cur));
+  setText('w-hit', hitRate(ow));
+  setText('w-in', fmt(ow.fresh_in)); setText('w-cr', fmt(ow.cache_read));
+  setText('w-out', fmt(ow.out)); setText('w-rs', fmt(ow.reasoning));
+
+  // 图表
+  drawBars('chart-day', d.by_day.slice(-14).map(r=>({
+    label: r.day.slice(5), c: r.codex.total, w: r.workbuddy.total })));
+  drawBars('chart-hour', d.by_hour.slice(-24).map(r=>({
+    label: r.hour.slice(11,13), c: r.codex.total, w: r.workbuddy.total })));
+
+  // 模型
+  const box = document.getElementById('models');
+  const list = d.by_model.filter(m=>m.total>0).slice(0,9);
+  if (!list.length){ box.innerHTML='<div class="empty">暂无数据</div>'; }
+  else {
+    const max = list[0].total;
+    box.innerHTML = list.map(m=>{
+      const color = m.source==='codex'?CODEX:WB;
+      const bg = m.source==='codex'?'var(--codex-bg)':'var(--wb-bg)';
+      return `<div class="mrow">
+        <div class="nm"><span class="badge ${m.source==='codex'?'c':'w'}" style="background:${bg}">${m.source==='codex'?'CX':'WB'}</span>${m.model}</div>
+        <div class="track"><div class="fill" style="width:${(m.total/max*100).toFixed(1)}%;background:${color}"></div></div>
+        <div class="val">${fmt(m.total)} · ${money(m.cost,cur)}</div></div>`;
+    }).join('');
+  }
+
+  // 会话
+  const tb = document.getElementById('sessions');
+  const ss = d.sessions.slice(0,12);
+  tb.innerHTML = ss.length ? ss.map(s=>{
+    let ctx = '<span style="color:var(--tx3);font-size:11px">—</span>';
+    if (s.ctx_used && s.ctx_size){
+      const p = Math.min(100, s.ctx_used/s.ctx_size*100);
+      const col = p>=85?'var(--bad)':p>=65?'var(--warn)':'var(--ok)';
+      ctx = `<div class="ctx"><div class="track"><div class="fill" style="width:${p}%;background:${col}"></div></div><span>${p.toFixed(0)}%</span></div>`;
+    }
+    const name = s.title || s.project || s.session_id.slice(0,8);
+    const shr = (s.fresh_in + s.cache_read) ? (s.cache_read/(s.fresh_in+s.cache_read)*100) : 0;
+    const shrCol = shr>=60 ? 'var(--ok)' : shr>=30 ? 'var(--warn)' : 'var(--tx3)';
+    return `<tr>
+      <td><span class="badge ${s.source==='codex'?'c':'w'}">${s.source==='codex'?'CX':'WB'}</span></td>
+      <td class="trunc" title="${esc(name)}">${esc(name)}</td>
+      <td class="mono">${esc(s.model)}</td>
+      <td class="num">${fmt(s.total)}</td>
+      <td class="num" style="color:${shrCol};font-weight:600">${shr.toFixed(0)}%</td>
+      <td>${ctx}</td>
+      <td class="mono">${hhmmss(s.last_ts)}</td></tr>`;
+  }).join('') : '<tr><td colspan="7" class="empty">暂无数据</td></tr>';
+
+  // 流水
+  const fb = document.getElementById('flow');
+  const rc = d.recent;
+  fb.innerHTML = rc.length ? rc.map(r=>{
+    const isNew = r.ts > prevTopTs;
+    return `<tr class="${isNew?'new':''}">
+      <td class="mono">${hhmmss(r.ts)}</td>
+      <td><span class="badge ${r.source==='codex'?'c':'w'}">${r.source==='codex'?'CX':'WB'}</span></td>
+      <td class="mono">${esc(r.model)}</td>
+      <td class="trunc mono" title="${esc(r.project)}">${esc(r.project)}</td>
+      <td class="num">${fmt(r.fresh_in)}</td>
+      <td class="num" style="color:var(--tx3)">${fmt(r.cache_read)}</td>
+      <td class="num">${fmt(r.out)}</td>
+      <td class="num"><b>${fmt(r.total)}</b></td>
+      <td class="num">${money(r.cost,cur)}</td></tr>`;
+  }).join('') : '<tr><td colspan="9" class="empty">等待调用…</td></tr>';
+  if (rc.length) prevTopTs = rc[0].ts;
+
+  const st = d.stats;
+  setText('meta', `${st.calls_indexed.toLocaleString()} 次调用 · ${st.files_tracked} 个日志文件 · 扫描 ${st.scan_duration_ms}ms · ${hhmmss(d.generated_at)}`);
+  setPausedUI(d.paused === true);
+}
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function drawBars(id, rows){
+  const cv = document.getElementById(id);
+  const dpr = window.devicePixelRatio||1;
+  const W = cv.clientWidth, H = 200;
+  cv.width = W*dpr; cv.height = H*dpr;
+  const g = cv.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0);
+  g.clearRect(0,0,W,H);
+  if (!rows.length){
+    g.fillStyle='#8b94a0'; g.font='12px sans-serif'; g.textAlign='center';
+    g.fillText('暂无数据', W/2, H/2); return;
+  }
+  const padL=46, padR=8, padT=10, padB=24;
+  const cw = W-padL-padR, ch = H-padT-padB;
+  const max = Math.max(...rows.map(r=>r.c+r.w), 1);
+  // 网格
+  g.strokeStyle='#eef0f2'; g.lineWidth=1;
+  g.fillStyle='#8b94a0'; g.font='10px ui-monospace,monospace'; g.textAlign='right';
+  for(let i=0;i<=4;i++){
+    const y = padT + ch - ch*i/4;
+    g.beginPath(); g.moveTo(padL,y); g.lineTo(W-padR,y); g.stroke();
+    g.fillText(fmt(max*i/4), padL-7, y+3);
+  }
+  const slot = cw/rows.length, bw = Math.min(30, slot*0.62);
+  rows.forEach((r,i)=>{
+    const x = padL + slot*i + (slot-bw)/2;
+    const hc = r.c/max*ch, hw = r.w/max*ch;
+    let y = padT+ch;
+    if (hc>0){ y-=hc; g.fillStyle=CODEX; rr(g,x,y,bw,hc,hw>0?0:3); }
+    if (hw>0){ y-=hw; g.fillStyle=WB; rr(g,x,y,bw,hw,3); }
+    if (rows.length<=14 || i%3===0){
+      g.fillStyle='#8b94a0'; g.font='10px sans-serif'; g.textAlign='center';
+      g.fillText(r.label, x+bw/2, H-8);
+    }
+  });
+}
+function rr(g,x,y,w,h,r){
+  g.beginPath();
+  g.moveTo(x, y+h); g.lineTo(x, y+r);
+  g.quadraticCurveTo(x, y, x+r, y);
+  g.lineTo(x+w-r, y); g.quadraticCurveTo(x+w, y, x+w, y+r);
+  g.lineTo(x+w, y+h); g.closePath(); g.fill();
+}
+
+// SSE
+let es, lastData=null;
+function connect(){
+  es = new EventSource('/api/stream');
+  es.onopen = ()=>{ document.getElementById('dot').classList.remove('off');
+    setText('conn','实时连接'); };
+  es.onmessage = e => { lastData = JSON.parse(e.data); render(lastData); };
+  es.onerror = ()=>{ document.getElementById('dot').classList.add('off');
+    setText('conn','重连中…'); es.close(); setTimeout(connect, 3000); };
+}
+connect();
+window.addEventListener('resize', ()=>{ if(lastData) render(lastData); });
+// 倒计时每分钟本地刷新
+setInterval(()=>{ if(lastData) render(lastData); }, 60000);
+
+// 根据暂停状态切换按钮与提示
+function setPausedUI(paused){
+  document.getElementById('btn-stop').style.display  = paused ? 'none' : '';
+  document.getElementById('btn-start').style.display = paused ? '' : 'none';
+  let banner = document.getElementById('paused-banner');
+  if (paused){
+    setText('conn','已暂停'); document.getElementById('dot').classList.add('off');
+    if (!banner){
+      banner = document.createElement('div'); banner.id = 'paused-banner';
+      banner.style.cssText = 'margin-bottom:14px;padding:10px 14px;border:1px solid #ffe0b2;'
+        + 'background:#fff8e6;color:#a05a00;border-radius:10px;font-size:13px;'
+        + 'display:flex;align-items:center;gap:8px';
+      banner.innerHTML = '⏸ 监控已暂停 — 数据停止刷新，点击右上角「开始」即可恢复';
+      document.querySelector('.wrap').prepend(banner);
+    }
+  } else {
+    setText('conn','实时连接'); document.getElementById('dot').classList.remove('off');
+    if (banner) banner.remove();
+  }
+}
+// 停止按钮 → 暂停
+function pauseMonitor(){
+  if (!window.confirm('确定暂停监控？\n暂停后数据停止刷新，点「开始」可随时恢复。')) return;
+  const btn = document.getElementById('btn-stop');
+  btn.classList.add('spin'); setText('btn-stop-txt','暂停中');
+  fetch('/api/pause', {cache:'no-store', method:'POST'})
+    .then(r=>{ if(!r.ok) throw 0; setPausedUI(true); })
+    .catch(()=>{ window.alert('暂停请求失败'); })
+    .finally(()=>{ btn.classList.remove('spin'); setText('btn-stop-txt','停止'); });
+}
+// 开始按钮 → 恢复
+function startMonitor(){
+  const btn = document.getElementById('btn-start');
+  btn.classList.add('spin'); setText('btn-start-txt','启动中');
+  fetch('/api/resume', {cache:'no-store', method:'POST'})
+    .then(r=>{ if(!r.ok) throw 0; setPausedUI(false); })
+    .catch(()=>{ window.alert('开始请求失败'); })
+    .finally(()=>{ btn.classList.remove('spin'); setText('btn-start-txt','开始'); });
+}
+document.getElementById('btn-stop').addEventListener('click', pauseMonitor);
+document.getElementById('btn-start').addEventListener('click', startMonitor);
+</script>
+</body>
+</html>

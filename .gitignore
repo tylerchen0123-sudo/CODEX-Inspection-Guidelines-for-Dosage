@@ -1,0 +1,25 @@
+# ===== 个人数据 / 运行时产物（绝不入库）=====
+# monitor.db 内含本地解析出的真实 token 消耗明细
+monitor.db
+*.db
+# .scan-state.json 内含你的会话路径、项目名、扫描 offset
+.scan-state.json
+_scan-*.json
+
+# 一次性生成脚本 / 临时文件
+_gen_report.py
+_page.html
+*.html.tmp
+
+# 本项目交付报告（含个人聚合数据，留本地即可）
+01-*执行报告*.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# 系统
+.DS_Store
+Thumbs.db
+*.log
