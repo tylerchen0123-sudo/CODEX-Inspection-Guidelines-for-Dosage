@@ -2,7 +2,7 @@
 
 本地零依赖的 Token 消耗实时监控看板，同时覆盖 **CODEX** 与 **WORKBUDDY** 双端。
 
-> **无需安装：** 把仓库所有文件下载下来，直接双击 `启动监控.bat` 即可运行，不需要 `pip install`、也不需要配置任何环境。
+> **无需安装：** 把仓库所有文件下载下来，直接双击 `run.bat` 即可运行，不需要 `pip install`、也不需要配置任何环境。
 
 > **只想要 CODEX 监控？** 复制本仓库后让 AI 去掉 WORKBUDDY 相关部分即可（主要涉及 `collector.py` 中的 WorkBuddy 扫描逻辑与 `web/index.html` 里的 WorkBuddy 卡片/图表）。
 
@@ -24,7 +24,7 @@
 
 ### 方式一：双击启动器（推荐）
 
-双击 `启动监控.bat`：
+双击 `run.bat`：
 
 1. 自动释放 `127.0.0.1:8910` 残留端口
 2. 前台启动服务（窗口常驻，报错不会闪退）
@@ -32,7 +32,7 @@
 
 关闭该窗口即停止监控。
 
-> **重启电脑后：** 监控不会自启，双击 `启动监控.bat` 一次即可重新拉起服务并打开看板。
+> **重启电脑后：** 监控不会自启，双击 `run.bat` 一次即可重新拉起服务并打开看板。
 
 ### 方式二：命令行
 
@@ -55,10 +55,11 @@ python server.py --port 8910 --interval 3
 
 ```
 server.py           HTTP/SSE 服务 + 控制接口
+extras.py          活跃会话最新消息抓取（≤10 字）
 collector.py        双端日志扫描 + 统计聚合
 pricing.json        模型定价表
 web/index.html      看板前端（Canvas + SSE）
-启动监控.bat         一键启动器
+run.bat         一键启动器
 assets/dashboard-v5-running-blurred.png 看板截图
 .gitignore          排除 monitor.db / .scan-state.json / __pycache__ 等本地状态
 ```
@@ -84,7 +85,7 @@ assets/dashboard-v5-running-blurred.png 看板截图
 
 A local, zero-dependency real-time Token usage monitoring dashboard that covers both **CODEX** and **WORKBUDDY**.
 
-> **No installation required:** Download all repository files and double-click `启动监控.bat` to run. No `pip install`, no environment setup.
+> **No installation required:** Download all repository files and double-click `run.bat` to run. No `pip install`, no environment setup.
 
 > **CODEX-only?** After cloning the repo, ask an AI to remove the WORKBUDDY parts (mainly the WorkBuddy scanning logic in `collector.py` and the WorkBuddy cards/charts in `web/index.html`).
 
@@ -102,7 +103,7 @@ A local, zero-dependency real-time Token usage monitoring dashboard that covers 
 
 ### Option 1: Double-click the launcher (recommended)
 
-Double-click `启动监控.bat`:
+Double-click `run.bat`:
 
 1. Automatically frees the `127.0.0.1:8910` port if occupied
 2. Starts the server in the foreground (window stays open; errors won't crash it)
@@ -110,7 +111,7 @@ Double-click `启动监控.bat`:
 
 Closing that window stops the monitoring.
 
-> **After a reboot:** the monitor does not auto-start. Just double-click `启动监控.bat` once to bring the service and dashboard back up.
+> **After a reboot:** the monitor does not auto-start. Just double-click `run.bat` once to bring the service and dashboard back up.
 
 ### Option 2: Command line
 
