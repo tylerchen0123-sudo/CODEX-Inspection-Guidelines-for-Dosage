@@ -4,39 +4,67 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CODEX × WORKBUDDY · Token 实时监控</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Kalam:wght@700&display=swap" rel="stylesheet">
 <style>
+  /* ── 日漫「奋斗」风格设计系统（沿用 psyaito 漫画模板：粗黑描边 / 白抜き / 反色 hover）
+         并叠加少年漫要素：网点底纹 / 硬阴影漫画格 / 红黄撞色 / 集中線 / 警示旗 ── */
   :root{
-    --bg:#f6f7f9; --card:#ffffff; --line:#e6e8eb; --line2:#f0f1f3;
-    --tx:#1a1d21; --tx2:#5c6570; --tx3:#8b94a0;
-    --codex:#10a37f; --codex-bg:#e7f6f1;
-    --wb:#3b6df5; --wb-bg:#e8eefe;
-    --ok:#12a150; --warn:#e08600; --bad:#dc2626;
-    --shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06);
+    --ink:#0a0a0a;            /* 漫画黑 */
+    --paper:#f7f1e3;          /* 米黄漫画纸 */
+    --card:#fffdf7;
+    --line:#0a0a0a;           /* 描边统一用墨黑 */
+    --line2:#ece3cf;          /* 内部分隔（暖灰） */
+    --tx:#161310; --tx2:#6b6256; --tx3:#9a9080;
+    --codex:#0aa06a; --codex-bg:#d6f2e6;
+    --wb:#2a5bff;   --wb-bg:#dbe6ff;
+    --ok:#0aa06a; --warn:#e0a200; --bad:#e01012;   /* 漫画红 */
+    --pop:#ffd400;            /* 漫画黄 */
+    --shadow:4px 4px 0 var(--ink);     /* 硬阴影漫画格 */
+    --shadow-sm:3px 3px 0 var(--ink);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{
-    background:var(--bg);color:var(--tx);
+    background-color:var(--paper);
+    background-image:radial-gradient(rgba(10,10,10,.05) 1px, transparent 1.4px);
+    background-size:15px 15px;       /* 网点 tone */
+    color:var(--tx);
     font:14px/1.5 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
     padding:20px 24px 48px;
   }
-  .wrap{max-width:1400px;margin:0 auto}
+  /* 顶部速度线装饰条 */
+  body::before{
+    content:"";position:fixed;top:0;left:0;right:0;height:6px;z-index:9;
+    background:repeating-linear-gradient(135deg,var(--bad) 0 14px,var(--pop) 14px 28px);
+  }
+  .wrap{max-width:1400px;margin:0 auto;position:relative}
 
-  header{display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap}
-  h1{font-size:19px;font-weight:650;letter-spacing:-.2px}
-  h1 .sep{color:var(--tx3);font-weight:400;margin:0 6px}
-  .pulse{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);
-    background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 11px}
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);
-    box-shadow:0 0 0 0 rgba(18,161,80,.55);animation:pp 2s infinite}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+  h1{font-size:20px;font-weight:800;letter-spacing:-.4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  h1 .sep{color:var(--bad);font-weight:800;margin:0 2px}
+  h1 .hl{background:var(--pop);border:2.5px solid var(--ink);padding:1px 9px;border-radius:4px;
+    box-shadow:2px 2px 0 var(--ink);font-size:18px}
+
+  /* 漫画「実況」印章 */
+  .stamp{font-family:'Kalam',"PingFang SC",sans-serif;font-weight:700;color:var(--bad);
+    border:3px solid var(--bad);border-radius:9px;padding:4px 11px;transform:rotate(-8deg);
+    box-shadow:2px 2px 0 var(--bad);font-size:15px;background:var(--card);letter-spacing:2px}
+
+  .pulse{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--tx);
+    background:var(--card);border:2.5px solid var(--ink);border-radius:999px;padding:4px 12px;
+    box-shadow:var(--shadow-sm);font-weight:700}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--ok);border:2px solid var(--ink);
+    box-shadow:0 0 0 0 rgba(10,160,106,.6);animation:pp 2s infinite}
   .dot.off{background:var(--bad);animation:none}
-  @keyframes pp{0%{box-shadow:0 0 0 0 rgba(18,161,80,.5)}70%{box-shadow:0 0 0 7px rgba(18,161,80,0)}100%{box-shadow:0 0 0 0 rgba(18,161,80,0)}}
+  @keyframes pp{0%{box-shadow:0 0 0 0 rgba(10,160,106,.5)}70%{box-shadow:0 0 0 7px rgba(10,160,106,0)}100%{box-shadow:0 0 0 0 rgba(10,160,106,0)}}
   .spacer{flex:1}
-  .meta{font-size:12px;color:var(--tx3)}
-  .btn{font:13px/1 inherit;font-weight:600;color:var(--tx2);background:var(--card);
-    border:1px solid var(--line);border-radius:8px;padding:7px 13px;cursor:pointer;
-    display:inline-flex;align-items:center;gap:6px;transition:.15s}
-  .btn:hover{border-color:#cfd4da;color:var(--tx)}
-  .btn:active{transform:translateY(1px)}
+  .meta{font-size:12px;color:var(--tx3);font-weight:600}
+  .btn{font:13px/1 inherit;font-weight:800;color:var(--tx);background:var(--card);
+    border:2.5px solid var(--ink);border-radius:8px;padding:7px 13px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px;box-shadow:var(--shadow-sm);transition:.12s}
+  .btn:hover{background:var(--ink);color:var(--paper)}      /* 反色 hover（沿用模板） */
+  .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
   .btn.spin svg{animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   .btn svg{width:14px;height:14px}
@@ -47,89 +75,97 @@
   .g32{grid-template-columns:1.35fr 1fr}
   @media(max-width:1080px){.g4{grid-template-columns:repeat(2,1fr)}.g2,.g32{grid-template-columns:1fr}}
 
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  .card{background:var(--card);border:3px solid var(--ink);border-radius:10px;
     padding:16px 18px;box-shadow:var(--shadow)}
-  .card h3{font-size:12px;font-weight:600;color:var(--tx2);letter-spacing:.3px;
-    text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-  .card h3 .tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;
+  .card h3{font-size:12px;font-weight:800;color:var(--tx);letter-spacing:.5px;
+    text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;
+    border-bottom:3px solid var(--ink);padding-bottom:8px}   /* 标题下粗黑条 */
+  .card h3 .tag{font-size:10px;font-weight:800;padding:2px 7px;border-radius:5px;
     text-transform:none;letter-spacing:0}
-  .tag.c{background:var(--codex-bg);color:var(--codex)}
-  .tag.w{background:var(--wb-bg);color:var(--wb)}
+  .tag.c{background:var(--codex);color:#fff;border:2px solid var(--ink);box-shadow:1.5px 1.5px 0 var(--ink)}
+  .tag.w{background:var(--wb);color:#fff;border:2px solid var(--ink);box-shadow:1.5px 1.5px 0 var(--ink)}
 
-  .kpi{font-size:30px;font-weight:680;letter-spacing:-1px;line-height:1.1;
-    font-variant-numeric:tabular-nums}
-  .kpi small{font-size:14px;font-weight:500;color:var(--tx3);margin-left:3px;letter-spacing:0}
-  .sub{font-size:12px;color:var(--tx2);margin-top:8px;display:flex;gap:12px;flex-wrap:wrap}
-  .sub b{font-weight:600;color:var(--tx);font-variant-numeric:tabular-nums}
-  .delta{font-size:11px;padding:2px 6px;border-radius:5px;background:#f1f3f5;color:var(--tx2)}
+  .kpi{font-family:'Anton',"Arial Narrow",sans-serif;font-size:32px;font-weight:400;
+    letter-spacing:.5px;line-height:1.05;color:var(--ink);font-variant-numeric:tabular-nums}
+  .kpi small{font-family:-apple-system,"PingFang SC",sans-serif;font-size:13px;font-weight:600;
+    color:var(--tx2);margin-left:3px;letter-spacing:0}
+  .sub{font-size:12px;color:var(--tx2);margin-top:8px;display:flex;gap:12px;flex-wrap:wrap;font-weight:600}
+  .sub b{font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+  .delta{font-size:11px;padding:2px 6px;border-radius:5px;background:var(--ink);color:var(--paper);font-weight:700}
 
-  /* 额度 */
-  .quota-bar{height:9px;border-radius:5px;background:#eef0f2;overflow:hidden;margin:10px 0 7px}
-  .quota-fill{height:100%;border-radius:5px;transition:width .6s cubic-bezier(.4,0,.2,1)}
-  .qrow{display:flex;justify-content:space-between;font-size:11.5px;color:var(--tx2)}
-
-  /* 双端对比条 */
-  .split{display:flex;height:11px;border-radius:6px;overflow:hidden;margin:12px 0 10px;background:#eef0f2}
+  /* 额度 / 双端对比条 —— 加墨黑描边 */
+  .quota-bar{height:10px;border:2px solid var(--ink);border-radius:5px;background:#efe7d4;overflow:hidden;margin:10px 0 7px}
+  .quota-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+  .qrow{display:flex;justify-content:space-between;font-size:11.5px;color:var(--tx2);font-weight:600}
+  .split{display:flex;height:11px;border:2px solid var(--ink);border-radius:6px;overflow:hidden;margin:12px 0 10px;background:#efe7d4}
   .split i{display:block;transition:width .6s}
-  .legend{display:flex;gap:16px;font-size:12px;color:var(--tx2);flex-wrap:wrap}
+  .legend{display:flex;gap:16px;font-size:12px;color:var(--tx2);flex-wrap:wrap;font-weight:600}
   .legend span{display:flex;align-items:center;gap:6px}
-  .sw{width:9px;height:9px;border-radius:3px;display:inline-block}
+  .sw{width:9px;height:9px;border-radius:3px;display:inline-block;border:1.5px solid var(--ink)}
 
-  /* 拆分明细 */
-  .breakdown{margin-top:14px;border-top:1px solid var(--line2);padding-top:12px;
+  .breakdown{margin-top:14px;border-top:2px solid var(--ink);padding-top:12px;
     display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
   .bd{text-align:center}
-  .bd em{display:block;font-size:11px;color:var(--tx3);font-style:normal;margin-bottom:3px}
-  .bd b{font-size:15px;font-weight:640;font-variant-numeric:tabular-nums}
+  .bd em{display:block;font-size:11px;color:var(--tx3);font-style:normal;margin-bottom:3px;font-weight:600}
+  .bd b{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
 
   canvas{width:100%;display:block}
 
-  /* 表格 */
+  /* 表格 —— 粗黑表头 + 黄 hover + 低命中率红警示旗 */
   table{width:100%;border-collapse:collapse;font-size:12.5px}
-  th{text-align:left;font-size:11px;font-weight:600;color:var(--tx3);
-    text-transform:uppercase;letter-spacing:.3px;padding:0 8px 8px;
-    border-bottom:1px solid var(--line);white-space:nowrap}
-  td{padding:8px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  th{text-align:left;font-size:11px;font-weight:800;color:var(--tx);
+    text-transform:uppercase;letter-spacing:.4px;padding:0 8px 8px;
+    border-bottom:3px solid var(--ink);white-space:nowrap}
+  td{padding:8px;border-bottom:2px solid var(--line2);vertical-align:middle}
   tr:last-child td{border-bottom:none}
-  tbody tr:hover{background:#fafbfc}
+  tbody tr:hover{background:#fff6cf}
+  tbody tr.lowhit td{background:#ffe1e1}
+  tbody tr.lowhit:hover td{background:#ffd0d0}
+  tbody tr.lowhit td:first-child{box-shadow:inset 4px 0 0 var(--bad)}   /* 红警示旗 */
   .num{text-align:right;font-variant-numeric:tabular-nums}
   .mono{font-family:ui-monospace,"SF Mono",Consolas,monospace;font-size:11.5px;color:var(--tx2)}
-  .badge{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:5px}
-  .badge.c{background:var(--codex-bg);color:var(--codex)}
-  .badge.w{background:var(--wb-bg);color:var(--wb)}
+  .badge{display:inline-block;font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:5px;
+    border:2px solid var(--ink);box-shadow:1.5px 1.5px 0 var(--ink)}
+  .badge.c{background:var(--codex);color:#fff}
+  .badge.w{background:var(--wb);color:#fff}
   .trunc{max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-  /* 上下文水位 */
   .ctx{display:flex;align-items:center;gap:7px;min-width:96px}
-  .ctx .track{flex:1;height:5px;border-radius:3px;background:#eef0f2;overflow:hidden}
+  .ctx .track{flex:1;height:5px;border-radius:3px;background:#efe7d4;overflow:hidden;border:1.5px solid var(--ink)}
   .ctx .fill{height:100%;border-radius:3px}
   .ctx span{font-size:10.5px;color:var(--tx3);font-variant-numeric:tabular-nums;min-width:28px}
 
-  /* 模型条 */
   .mrow{display:flex;align-items:center;gap:10px;margin-bottom:9px}
   .mrow .nm{width:150px;font-size:12px;display:flex;align-items:center;gap:7px;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .mrow .track{flex:1;height:16px;background:#f2f4f6;border-radius:4px;overflow:hidden}
-  .mrow .fill{height:100%;border-radius:4px;transition:width .6s}
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+  .mrow .track{flex:1;height:16px;background:#efe7d4;border:2px solid var(--ink);border-radius:4px;overflow:hidden}
+  .mrow .fill{height:100%;border-radius:3px;transition:width .6s}
   .mrow .val{width:104px;text-align:right;font-size:11.5px;color:var(--tx2);
-    font-variant-numeric:tabular-nums}
+    font-variant-numeric:tabular-nums;font-weight:600}
 
   .flow{max-height:340px;overflow-y:auto;margin:-4px -6px 0}
   .flow::-webkit-scrollbar{width:6px}
-  .flow::-webkit-scrollbar-thumb{background:#d8dce0;border-radius:3px}
-  @keyframes flash{from{background:#fff8e1}to{background:transparent}}
+  .flow::-webkit-scrollbar-thumb{background:var(--ink);border-radius:3px}
+  @keyframes flash{from{background:#fff6cf}to{background:transparent}}
   .new{animation:flash 2.2s ease-out}
 
-  .empty{color:var(--tx3);font-size:12.5px;padding:20px 0;text-align:center}
-  .foot{margin-top:20px;font-size:11.5px;color:var(--tx3);text-align:center;line-height:1.8}
+  .empty{color:var(--tx3);font-size:12.5px;padding:20px 0;text-align:center;font-weight:600}
+  .foot{margin-top:24px;font-size:11.5px;color:var(--tx3);text-align:center;line-height:1.8;
+    border-top:3px solid var(--ink);padding-top:14px}
+
+  /* 集中線 burst 水印（右上角） */
+  .burst{position:absolute;top:-4px;right:6px;width:130px;height:130px;opacity:.10;pointer-events:none;
+    background:repeating-conic-gradient(var(--ink) 0 2deg, transparent 2deg 7deg);border-radius:50%}
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="burst"></div>
 
   <header>
-    <h1>CODEX <span class="sep">×</span> WORKBUDDY <span class="sep">·</span> Token 实时监控</h1>
+    <h1>CODEX <span class="sep">×</span> WORKBUDDY <span class="sep">·</span> <span class="hl">Token 实时监控</span></h1>
     <div class="pulse"><i class="dot" id="dot"></i><span id="conn">连接中…</span></div>
+    <div class="stamp">実況</div>
     <div class="spacer"></div>
     <div class="meta" id="meta">—</div>
     <button class="btn" id="btn-start" title="开始 / 恢复监控" style="display:none">
@@ -234,12 +270,11 @@
       <div id="models"><div class="empty">暂无数据</div></div>
     </div>
     <div class="card">
-      <h3>活跃会话 <span class="tag" style="background:#f1f3f5;color:var(--tx2)">Top 12</span></h3>
+      <h3>活跃会话 <span class="tag" style="background:var(--ink);color:var(--paper)">Top 12</span></h3>
       <div style="overflow-x:auto">
         <table>
-          <thead><tr><th>端</th><th>会话</th><th>模型</th>
-            <th class="num">Tokens</th><th class="num">命中率</th><th>上下文</th><th>最近</th></tr></thead>
-          <tbody id="sessions"><tr><td colspan="7" class="empty">暂无数据</td></tr></tbody>
+          <thead><tr><th>端</th><th>会话</th><th>最新消息（我发送）</th><th class="num">TOKEN</th><th class="num">命中率</th><th>最近</th></tr></thead>
+          <tbody id="sessions"><tr><td colspan="6" class="empty">暂无数据</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -247,7 +282,7 @@
 
   <!-- 实时流水 -->
   <div class="card">
-    <h3>实时调用流水 <span class="tag" style="background:#f1f3f5;color:var(--tx2)">最近 60 次</span></h3>
+    <h3>实时调用流水 <span class="tag" style="background:var(--ink);color:var(--paper)">最近 60 次</span></h3>
     <div class="flow">
       <table>
         <thead><tr><th>时间</th><th>端</th><th>模型</th><th class="trunc">项目</th>
@@ -266,7 +301,7 @@
 </div>
 
 <script>
-const CODEX='#10a37f', WB='#3b6df5';
+const CODEX='#0aa06a', WB='#2a5bff';
 let prevTopTs = 0;
 
 const fmt = n => {
@@ -368,7 +403,7 @@ function render(d){
       return `<div class="mrow">
         <div class="nm"><span class="badge ${m.source==='codex'?'c':'w'}" style="background:${bg}">${m.source==='codex'?'CX':'WB'}</span>${m.model}</div>
         <div class="track"><div class="fill" style="width:${(m.total/max*100).toFixed(1)}%;background:${color}"></div></div>
-        <div class="val">${fmt(m.total)} · ${money(m.cost,cur)}</div></div>`;
+        <div class="val">${fmt(m.total)} · ${money(m.cost,cur)} · 命中 ${hitRate(m)}</div></div>`;
     }).join('');
   }
 
@@ -376,24 +411,20 @@ function render(d){
   const tb = document.getElementById('sessions');
   const ss = d.sessions.slice(0,12);
   tb.innerHTML = ss.length ? ss.map(s=>{
-    let ctx = '<span style="color:var(--tx3);font-size:11px">—</span>';
-    if (s.ctx_used && s.ctx_size){
-      const p = Math.min(100, s.ctx_used/s.ctx_size*100);
-      const col = p>=85?'var(--bad)':p>=65?'var(--warn)':'var(--ok)';
-      ctx = `<div class="ctx"><div class="track"><div class="fill" style="width:${p}%;background:${col}"></div></div><span>${p.toFixed(0)}%</span></div>`;
-    }
     const name = s.title || s.project || s.session_id.slice(0,8);
-    const shr = (s.fresh_in + s.cache_read) ? (s.cache_read/(s.fresh_in+s.cache_read)*100) : 0;
-    const shrCol = shr>=60 ? 'var(--ok)' : shr>=30 ? 'var(--warn)' : 'var(--tx3)';
-    return `<tr>
+    const last = s.last_user || '—';
+    const denom = (s.fresh_in||0)+(s.cache_read||0);
+    const hr = denom ? (s.cache_read/denom*100) : null;
+    const hrTxt = hr==null ? '—' : hr.toFixed(1)+'%';
+    const low = (hr!==null && hr < 95);
+    return `<tr class="${low?'lowhit':''}">
       <td><span class="badge ${s.source==='codex'?'c':'w'}">${s.source==='codex'?'CX':'WB'}</span></td>
       <td class="trunc" title="${esc(name)}">${esc(name)}</td>
-      <td class="mono">${esc(s.model)}</td>
+      <td class="trunc" style="max-width:520px" title="${esc(last)}">${esc(last)}</td>
       <td class="num">${fmt(s.total)}</td>
-      <td class="num" style="color:${shrCol};font-weight:600">${shr.toFixed(0)}%</td>
-      <td>${ctx}</td>
+      <td class="num" style="${low?'color:#dc2626;font-weight:800':''}">${hrTxt}</td>
       <td class="mono">${hhmmss(s.last_ts)}</td></tr>`;
-  }).join('') : '<tr><td colspan="7" class="empty">暂无数据</td></tr>';
+  }).join('') : '<tr><td colspan="6" class="empty">暂无数据</td></tr>';
 
   // 流水
   const fb = document.getElementById('flow');
@@ -429,15 +460,15 @@ function drawBars(id, rows){
   g.setTransform(dpr,0,0,dpr,0,0);
   g.clearRect(0,0,W,H);
   if (!rows.length){
-    g.fillStyle='#8b94a0'; g.font='12px sans-serif'; g.textAlign='center';
+    g.fillStyle='#9a9080'; g.font='12px sans-serif'; g.textAlign='center';
     g.fillText('暂无数据', W/2, H/2); return;
   }
   const padL=46, padR=8, padT=10, padB=24;
   const cw = W-padL-padR, ch = H-padT-padB;
   const max = Math.max(...rows.map(r=>r.c+r.w), 1);
   // 网格
-  g.strokeStyle='#eef0f2'; g.lineWidth=1;
-  g.fillStyle='#8b94a0'; g.font='10px ui-monospace,monospace'; g.textAlign='right';
+  g.strokeStyle='#ece3cf'; g.lineWidth=1;
+  g.fillStyle='#9a9080'; g.font='10px ui-monospace,monospace'; g.textAlign='right';
   for(let i=0;i<=4;i++){
     const y = padT + ch - ch*i/4;
     g.beginPath(); g.moveTo(padL,y); g.lineTo(W-padR,y); g.stroke();
@@ -451,7 +482,7 @@ function drawBars(id, rows){
     if (hc>0){ y-=hc; g.fillStyle=CODEX; rr(g,x,y,bw,hc,hw>0?0:3); }
     if (hw>0){ y-=hw; g.fillStyle=WB; rr(g,x,y,bw,hw,3); }
     if (rows.length<=14 || i%3===0){
-      g.fillStyle='#8b94a0'; g.font='10px sans-serif'; g.textAlign='center';
+      g.fillStyle='#9a9080'; g.font='10px sans-serif'; g.textAlign='center';
       g.fillText(r.label, x+bw/2, H-8);
     }
   });
@@ -488,9 +519,9 @@ function setPausedUI(paused){
     setText('conn','已暂停'); document.getElementById('dot').classList.add('off');
     if (!banner){
       banner = document.createElement('div'); banner.id = 'paused-banner';
-      banner.style.cssText = 'margin-bottom:14px;padding:10px 14px;border:1px solid #ffe0b2;'
-        + 'background:#fff8e6;color:#a05a00;border-radius:10px;font-size:13px;'
-        + 'display:flex;align-items:center;gap:8px';
+      banner.style.cssText = 'margin-bottom:14px;padding:10px 14px;border:3px solid var(--bad);'
+        + 'background:#ffe1e1;color:var(--bad);border-radius:10px;font-size:13px;font-weight:800;'
+        + 'display:flex;align-items:center;gap:8px;box-shadow:var(--shadow-sm)';
       banner.innerHTML = '⏸ 监控已暂停 — 数据停止刷新，点击右上角「开始」即可恢复';
       document.querySelector('.wrap').prepend(banner);
     }

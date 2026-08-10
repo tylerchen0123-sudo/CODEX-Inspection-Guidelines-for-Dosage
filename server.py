@@ -1,15 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-CODEX + WORKBUDDY Token 实时监控 · HTTP 服务
-    python server.py [--port 8910] [--interval 3]
-
-  /                 看板页面
-  /api/summary      当前聚合快照 (JSON)
-  /api/stream       SSE 实时推流，有新调用即刻推送
-  /api/raw          最近调用明细 (JSON)
-  /api/pause        暂停扫描（进程保留，数据停止刷新）
-  /api/resume       恢复扫描
-  /api/shutdown     停止监控服务（关闭本进程）
+"""CODEX + WORKBUDDY Token 实时监控 · HTTP 服务 (主版本)
+   改动：WEB_DIR 指向 web_v2，首页改为日漫「奋斗」风格 _edited_v2.html
+         （沿用 psyaito 漫画模板：粗黑描边 / 反色 hover / 白抜き，叠加网点·硬阴影·红黄撞色）。
+    python server_v5.py [--port 8910] [--interval 3]
 """
 from __future__ import annotations
 
@@ -24,6 +17,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from collector import Collector
+import extras
 
 BASE_DIR = Path(__file__).resolve().parent
 WEB_DIR = BASE_DIR / "web"
@@ -40,6 +34,14 @@ def build_payload() -> dict:
     p = collector.build_summary()
     p = dict(p)
     p["paused"] = PAUSED
+    try:
+        um = extras.get_last_user_messages()
+        for s in p.get("sessions", []):
+            sid = s.get("session_id")
+            if sid in um:
+                s["last_user"] = um[sid]
+    except Exception as exc:
+        print(f"[extras error] {exc}")
     return p
 
 
@@ -50,7 +52,6 @@ def set_paused(state: bool) -> None:
 
 
 def refresh_loop(interval: float) -> None:
-    """后台扫描：未暂停时扫描并广播；暂停时仅空转。"""
     global latest_payload
     last_push = 0.0
     while True:
@@ -72,7 +73,7 @@ def refresh_loop(interval: float) -> None:
                                 dead.append(q)
                         for q in dead:
                             subscribers.remove(q)
-        except Exception as exc:  # 守护线程绝不退出
+        except Exception as exc:
             print(f"[scan error] {exc}")
         time.sleep(interval)
 
@@ -85,7 +86,7 @@ def shutdown_server() -> None:
 class Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
-    def log_message(self, fmt, *args):  # 静音访问日志
+    def log_message(self, fmt, *args):
         pass
 
     def _send(self, code: int, body: bytes, ctype: str) -> None:
@@ -96,7 +97,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def do_GET(self):  # noqa: N802
+    def do_GET(self):
         path = self.path.split("?")[0]
 
         if path in ("/", "/index.html"):
@@ -168,7 +169,7 @@ class Handler(BaseHTTPRequestHandler):
 
         self._send(404, b"not found", "text/plain; charset=utf-8")
 
-    def do_POST(self):  # noqa: N802
+    def do_POST(self):
         path = self.path.split("?")[0]
         if path in ("/api/pause", "/api/resume", "/api/shutdown"):
             return self.do_GET()
@@ -182,7 +183,7 @@ class Handler(BaseHTTPRequestHandler):
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=8910)
-    ap.add_argument("--interval", type=float, default=3.0, help="扫描间隔秒")
+    ap.add_argument("--interval", type=float, default=3.0)
     ap.add_argument("--no-open", action="store_true")
     args = ap.parse_args()
 
