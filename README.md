@@ -8,7 +8,7 @@
 
 ## 效果预览
 
-![CODEX × WORKBUDDY Token 实时监控看板](assets/dashboard.png)
+![CODEX × WORKBUDDY Token 实时监控看板](assets/dashboard-v5-running-blurred.png)
 
 ## 功能
 
@@ -59,7 +59,7 @@ collector.py        双端日志扫描 + 统计聚合
 pricing.json        模型定价表
 web/index.html      看板前端（Canvas + SSE）
 启动监控.bat         一键启动器
-assets/dashboard.png 看板截图
+assets/dashboard-v5-running-blurred.png 看板截图
 .gitignore          排除 monitor.db / .scan-state.json / __pycache__ 等本地状态
 ```
 
