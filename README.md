@@ -1,3 +1,19 @@
+# Codex Token Usage Monitor
+
+**Local, privacy-first observability for Codex token usage, cache activity, and active sessions.**
+
+- **Codex-first:** reads local `~/.codex/sessions` and `archived_sessions`
+- **Real-time dashboard:** SSE live updates with token, cache, and active-session visibility
+- **Local-first:** session analysis stays on the local machine
+- **Lightweight:** Python 3.10+ using the standard library; no third-party Python packages required
+- **Cross-platform:** Windows launcher plus command-line startup for macOS/Linux
+- **Optional:** WorkBuddy monitoring is supported as a secondary integration
+
+📦 **Current release:** v0.1.0 · Contributions and compatibility reports are welcome.
+
+> This is an independent open-source project, not an official OpenAI product. Locally derived usage values are not official billing records.
+
+---
 # CODEX × WORKBUDDY Token 实时监控（对话 Token 消耗，命中率）
 
 本地零依赖的 Token 消耗实时监控看板，同时覆盖 **CODEX** 与 **WORKBUDDY** 双端。
